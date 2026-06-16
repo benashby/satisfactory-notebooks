@@ -61,9 +61,14 @@ render-all:
     jupyter nbconvert --to html --execute *.ipynb
     @echo "→ rendered all notebooks"
 
-# Open the HTML render in the default browser
+# Open the HTML render in the default browser (renders first if HTML doesn't exist)
 open notebook="power_grid.ipynb":
-    xdg-open "$(basename {{notebook}} .ipynb).html"
+    #!/usr/bin/env bash
+    html="$(basename {{notebook}} .ipynb).html"
+    if [ ! -f "$html" ]; then
+        just render {{notebook}}
+    fi
+    xdg-open "$html"
 
 # Run then open in browser
 view notebook="power_grid.ipynb":

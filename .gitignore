@@ -1,0 +1,7 @@
+.direnv/
+.envrc
+.jupyter.pid
+.jupyter.log
+*.html
+__pycache__/
+.ipynb_checkpoints/
