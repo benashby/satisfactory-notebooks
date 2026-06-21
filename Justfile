@@ -1,23 +1,38 @@
 PID_FILE := ".jupyter.pid"
 PORT     := "8888"
+JUPYTER  := ".venv/bin/jupyter"
 
 # List available recipes
 default:
     @just --list
 
+# Create venv and install jupyter-ai (run once after cloning)
+setup:
+    #!/usr/bin/env bash
+    if [ ! -f ".venv/bin/jupyter" ]; then
+        echo "Creating venv..."
+        uv venv --system-site-packages .venv
+    fi
+    echo "Installing jupyter-ai..."
+    uv pip install --python .venv/bin/python 'jupyter-ai[jupyternaut]'
+    echo "Done. Run: just start"
+
 # Start JupyterLab server in background
 start:
     #!/usr/bin/env bash
+    if [ ! -f "{{JUPYTER}}" ]; then
+        echo "Run 'just setup' first to install jupyter-ai"
+        exit 1
+    fi
     if [ -f "{{PID_FILE}}" ] && kill -0 "$(cat {{PID_FILE}})" 2>/dev/null; then
         echo "JupyterLab already running (PID $(cat {{PID_FILE}}))"
         echo "  → http://localhost:{{PORT}}"
         exit 0
     fi
-    nohup jupyter lab --no-browser --port={{PORT}} > .jupyter.log 2>&1 &
+    nohup {{JUPYTER}} lab --no-browser --port={{PORT}} > .jupyter.log 2>&1 &
     echo $! > {{PID_FILE}}
     echo "JupyterLab started (PID $!)"
     sleep 2
-    # Print the token URL from the log
     grep -o 'http://localhost:{{PORT}}/lab?token=[^ ]*' .jupyter.log | tail -1 || \
         echo "  → check .jupyter.log for the token URL"
 
@@ -47,18 +62,18 @@ status:
         echo "Not running"
     fi
 
-# Execute all notebooks and save outputs in-place
+# Execute notebook and save outputs in-place
 run notebook="power_grid.ipynb":
-    jupyter nbconvert --to notebook --execute --inplace {{notebook}}
+    {{JUPYTER}} nbconvert --to notebook --execute --inplace {{notebook}}
 
 # Render a notebook to HTML (output: <name>.html)
 render notebook="power_grid.ipynb":
-    jupyter nbconvert --to html --execute {{notebook}}
+    {{JUPYTER}} nbconvert --to html --execute {{notebook}}
     @echo "→ $(basename {{notebook}} .ipynb).html"
 
 # Render all notebooks to HTML
 render-all:
-    jupyter nbconvert --to html --execute *.ipynb
+    {{JUPYTER}} nbconvert --to html --execute *.ipynb
     @echo "→ rendered all notebooks"
 
 # Open the HTML render in the default browser (renders first if HTML doesn't exist)
