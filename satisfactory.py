@@ -1,7 +1,7 @@
 """
 satisfactory.py — All Satisfactory game data, importable in any notebook.
 
-    from satisfactory import ITEMS, RECIPES, BUILDINGS, production_chain
+    from satisfactory import ITEMS, RECIPES, BUILDINGS
 
 Data is loaded from data.json and converted to rates (items/min) at import time.
 All recipe quantities are in items/min, not per-cycle amounts.
@@ -10,7 +10,7 @@ All recipe quantities are in items/min, not per-cycle amounts.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -87,50 +87,6 @@ class Pipe:
     key: str
     name: str
     rate: float  # m3/min
-
-
-@dataclass
-class ProductionNode:
-    """One node in a production chain tree."""
-    item_key: str
-    rate: float                          # items/min demanded at this node
-    recipe: Optional[Recipe]             # None if this is a raw resource leaf
-    buildings: float                     # fractional building count at 100% clock
-    children: list[ProductionNode] = field(default_factory=list)
-
-    @property
-    def is_resource(self) -> bool:
-        return self.recipe is None
-
-    def all_nodes(self) -> list[ProductionNode]:
-        """Flat list of every node in the subtree (depth-first)."""
-        result: list[ProductionNode] = [self]
-        for child in self.children:
-            result.extend(child.all_nodes())
-        return result
-
-    def raw_resources(self) -> dict[str, float]:
-        """Total items/min of each raw resource consumed by the full subtree."""
-        totals: dict[str, float] = {}
-        for node in self.all_nodes():
-            if node.is_resource:
-                totals[node.item_key] = totals.get(node.item_key, 0.0) + node.rate
-        return totals
-
-    def building_totals(self) -> dict[str, float]:
-        """Total fractional building count by building key across the full subtree."""
-        totals: dict[str, float] = {}
-        for node in self.all_nodes():
-            if node.recipe:
-                b = node.recipe.building
-                totals[b] = totals.get(b, 0.0) + node.buildings
-        return totals
-
-    def __repr__(self) -> str:
-        r = f"{self.item_key} @ {self.rate:.2f}/min"
-        if self.recipe:
-            r += f" ({self.buildings:.2f}x {self.recipe.building})"
-        return r
 
 
 # ---------------------------------------------------------------------------
@@ -254,62 +210,3 @@ def buildings_needed(item_key: str, target_rate: float, recipe: Optional[Recipe]
         return 0.0
     output_rate = r.products.get(item_key, 0.0)
     return 0.0 if output_rate == 0 else target_rate / output_rate
-
-
-# ---------------------------------------------------------------------------
-# Production chain — YOUR CODE GOES HERE
-# ---------------------------------------------------------------------------
-
-def production_chain(
-    item_key: str,
-    target_rate: float,
-    prefer_alt: bool = False,
-    _overrides: Optional[dict[str, Recipe]] = None,
-) -> ProductionNode:
-    """
-    Recursively build a production tree for item_key at target_rate items/min.
-
-    Parameters
-    ----------
-    item_key     : item to produce, e.g. 'rotor'
-    target_rate  : desired output in items/min
-    prefer_alt   : use alternate recipes where available
-    _overrides   : optional {item_key: Recipe} to force specific recipes per item
-
-    Returns
-    -------
-    ProductionNode — root of the full dependency tree.
-    Leaf nodes (raw resources) have recipe=None and buildings=0.
-    Call .raw_resources() or .building_totals() on the result for summary data.
-
-    Algorithm
-    ---------
-    1. Check _overrides first, then recipe_for(item_key, prefer_alt).
-    2. If no recipe → raw resource. Return leaf node (recipe=None, buildings=0, no children).
-    3. Calculate buildings = buildings_needed(item_key, target_rate, recipe).
-    4. For each ingredient, calculate the rate needed to sustain target_rate output:
-           needed_rate = recipe.ingredients[ing_key]
-                         * (target_rate / recipe.products[item_key])
-       Then recurse: production_chain(ing_key, needed_rate, prefer_alt, _overrides).
-    5. Return ProductionNode(item_key, target_rate, recipe, buildings, children).
-    """
-    overrides = _overrides or {}
-    if item_key in RESOURCES and item_key not in overrides:
-        return ProductionNode(item_key, target_rate, recipe=None, buildings=0.0)
-    recipe = overrides.get(item_key) or recipe_for(item_key, prefer_alt)
-
-    if recipe is None:
-        return ProductionNode(item_key, target_rate, recipe=None, buildings=0.0)
-
-    scale = target_rate / recipe.products[item_key]
-    children = [
-        production_chain(ing_key, ing_rate * scale, prefer_alt, overrides)
-        for ing_key, ing_rate in recipe.ingredients.items()
-    ]
-    return ProductionNode(
-        item_key=item_key,
-        rate=target_rate,
-        recipe=recipe,
-        buildings=buildings_needed(item_key, target_rate, recipe),
-        children=children,
-    )
