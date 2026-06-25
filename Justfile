@@ -14,7 +14,7 @@ setup:
         uv venv --system-site-packages .venv
     fi
     echo "Installing jupyter-ai..."
-    uv pip install --python .venv/bin/python 'jupyter-ai[jupyternaut]'
+    uv pip install --python .venv/bin/python 'jupyter-ai[jupyternaut]' jupyter-mcp-server
     echo "Done. Run: just start"
 
 # Start JupyterLab server in background
@@ -29,7 +29,7 @@ start:
         echo "  → http://localhost:{{PORT}}"
         exit 0
     fi
-    nohup {{JUPYTER}} lab --no-browser --port={{PORT}} > .jupyter.log 2>&1 &
+    nohup {{JUPYTER}} lab --no-browser --port={{PORT}} --IdentityProvider.token='' > .jupyter.log 2>&1 &
     echo $! > {{PID_FILE}}
     echo "JupyterLab started (PID $!)"
     sleep 2
