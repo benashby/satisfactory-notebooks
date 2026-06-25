@@ -64,9 +64,10 @@ status:
         echo "Not running"
     fi
 
-# Execute notebook and save outputs in-place
+# Execute notebook and save outputs in-place (auto-trusts so HTML/JS renders in JupyterLab)
 run notebook="power_grid.ipynb":
     {{JUPYTER}} nbconvert --to notebook --execute --inplace {{notebook}}
+    {{JUPYTER}} trust {{notebook}}
 
 # Render a notebook to HTML (output: <name>.html)
 render notebook="power_grid.ipynb":
