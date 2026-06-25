@@ -6,15 +6,23 @@ JUPYTER  := ".venv/bin/jupyter"
 default:
     @just --list
 
-# Create venv and install jupyter-ai (run once after cloning)
+# Create venv and install the Jupyter MCP server (run once after cloning)
 setup:
     #!/usr/bin/env bash
     if [ ! -f ".venv/bin/jupyter" ]; then
         echo "Creating venv..."
         uv venv --system-site-packages .venv
     fi
-    echo "Installing jupyter-ai..."
-    uv pip install --python .venv/bin/python 'jupyter-ai[jupyternaut]' jupyter-mcp-server
+    echo "Installing jupyter-mcp-server..."
+    # NOTE: we deliberately do NOT install jupyter-ai here. jupyter-ai 3.x hard-requires
+    # jupyter-server-documents (Datalayer's next-gen RTC backend), which reroutes kernel
+    # output through a YDoc. That breaks jupyter-mcp-server's execute path (it never sees
+    # completion → times out) AND, being a JupyterLab >=4.5 stack, throws "File ID error"
+    # on Nix's JupyterLab 4.4.x. jupyter-mcp-server uses the classic nbmodel/kernel path
+    # and needs none of it, so installing it alone keeps JupyterLab in plain single-user
+    # mode: notebooks open normally and the MCP executes code. (Use Claude Code + the MCP
+    # instead of in-Lab Jupyternaut.)
+    uv pip install --python .venv/bin/python jupyter-mcp-server
     echo "Done. Run: just start"
 
 # Start JupyterLab server in background
@@ -65,12 +73,12 @@ status:
     fi
 
 # Execute notebook and save outputs in-place (auto-trusts so HTML/JS renders in JupyterLab)
-run notebook="power_grid.ipynb":
+run notebook="index.ipynb":
     {{JUPYTER}} nbconvert --to notebook --execute --inplace {{notebook}}
     {{JUPYTER}} trust {{notebook}}
 
 # Render a notebook to HTML (output: <name>.html)
-render notebook="power_grid.ipynb":
+render notebook="index.ipynb":
     {{JUPYTER}} nbconvert --to html --execute {{notebook}}
     @echo "→ $(basename {{notebook}} .ipynb).html"
 
@@ -80,7 +88,7 @@ render-all:
     @echo "→ rendered all notebooks"
 
 # Open the HTML render in the default browser (renders first if HTML doesn't exist)
-open notebook="power_grid.ipynb":
+open notebook="index.ipynb":
     #!/usr/bin/env bash
     html="$(basename {{notebook}} .ipynb).html"
     if [ ! -f "$html" ]; then
@@ -89,6 +97,6 @@ open notebook="power_grid.ipynb":
     xdg-open "$html"
 
 # Run then open in browser
-view notebook="power_grid.ipynb":
+view notebook="index.ipynb":
     just render {{notebook}}
     just open {{notebook}}
