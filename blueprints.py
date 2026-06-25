@@ -101,15 +101,24 @@ BLUEPRINTS: dict[str, Blueprint] = {
         name="90 plates + 180 screws to 15 RIP",
         inputs={"iron-plate": 90.0, "screw": 180.0},
         outputs={"reinforced-iron-plate": 15.0},
+        stages=(
+            Stage(item_key="reinforced-iron-plate", machines=3, rate_at_100=15.0, building="assembler"),
+        ),
     ),
     "rotor": Blueprint(
         name="60 rods + 300 screws to 12 rotors",
         inputs={"iron-rod": 60.0, "screw": 300.0},
         outputs={"rotor": 12.0},
+        stages=(
+            Stage(item_key="rotor", machines=3, rate_at_100=12.0, building="assembler"),
+        ),
     ),
     "smart-plating": Blueprint(
         name="6 RIP + 6 rotors to 6 smart plating",
         inputs={"reinforced-iron-plate": 6.0, "rotor": 6.0},
         outputs={"smart-plating": 6.0},
+        stages=(
+            Stage(item_key="smart-plating", machines=3, rate_at_100=6.0, building="assembler"),
+        ),
     ),
 }
