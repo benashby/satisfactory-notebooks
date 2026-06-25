@@ -29,7 +29,9 @@ start:
         echo "  → http://localhost:{{PORT}}"
         exit 0
     fi
-    nohup {{JUPYTER}} lab --no-browser --port={{PORT}} --IdentityProvider.token='' > .jupyter.log 2>&1 &
+    GV=$(nix-build '<nixpkgs>' -A graphviz --no-out-link 2>/dev/null)
+    [ -n "$GV" ] && export PATH="$GV/bin:$PATH"
+    nohup {{JUPYTER}} lab --no-browser --port={{PORT}} --IdentityProvider.token='' --ServerApp.disable_check_xsrf=True > .jupyter.log 2>&1 &
     echo $! > {{PID_FILE}}
     echo "JupyterLab started (PID $!)"
     sleep 2
