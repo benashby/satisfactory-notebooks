@@ -149,6 +149,57 @@ The build plan table includes a "Belt lines" column for every input/output showi
 
 ---
 
+## Extensibility
+
+### When you claim new nodes
+Change one number in `RESOURCE_SUPPLY` and re-run. The LP reoptimizes globally — it may re-route existing resources differently once the new supply changes relative scarcities.
+
+```python
+# Before: 5 iron ore veins
+'iron-ore': 5 * 480,
+
+# After claiming 2 more:
+'iron-ore': 7 * 480,   # just change the multiplier
+```
+
+### When you unlock a new tier (bauxite, aluminum, nitrogen, etc.)
+Add the new resource to `RESOURCE_SUPPLY`. All tier 7–9 recipes are already in `data.json` — the solver was already aware of them but set their consumption to ≤ 0 because supply was 0. Adding the resource automatically activates the full recipe chain.
+
+```python
+RESOURCE_SUPPLY = {
+    # existing...
+    'bauxite':      4 * 480,   # add when nodes are claimed
+    'nitrogen-gas': 2 * 120,   # water extractor equivalent
+}
+```
+
+### Switching the objective (sink points vs phase completion rate)
+The objective is a single `prob +=` line in `solve.py`. Two natural modes:
+
+| Mode | When to use | Objective |
+|---|---|---|
+| **Sink points** (current default) | Farming coupons, no active phase target | `sum(sink_points[i] * net_output[i])` |
+| **Phase completion rate** | Actively trying to complete a specific phase | `sum(phase_demand[p] * net_output[p])` for project parts `p` |
+
+`optimization.ipynb` will document this switch with a commented-out alternative objective cell.
+
+### Known data gap — Phase 5
+`biochemical-sculptor` is not in `data.json`. When unlocked, it needs to be added as:
+1. An item entry in `data.json` with `sink_points` value
+2. Its recipe added to the recipes list
+3. Updated `TOTAL_DEMAND` in the optimization notebook
+
+All other project parts through Phase 4 are fully present.
+
+### What a "new phase" workflow looks like
+1. Claim new resource nodes → update `RESOURCE_SUPPLY`
+2. Re-run `optimization.ipynb` (one cell-by-cell run, ~2 seconds)
+3. Re-run `factory-plan.ipynb` → updated graph and build plan
+
+No other changes required unless a recipe or item is genuinely missing from `data.json`.
+
+---
+
 ## Out of Scope
 
 - Overclocking >100% (future: could offer as alternative to ceiling)  
