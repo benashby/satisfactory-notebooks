@@ -3809,7 +3809,7 @@
       "products": [
         [
           "nuke-nobelisk",
-          5
+          1
         ]
       ]
     },
@@ -6802,7 +6802,7 @@
         ],
         [
           "excited-photonic-matter",
-          10
+          25
         ]
       ],
       "products": [
@@ -7539,6 +7539,50 @@
         [
           "biochemical-sculptor",
           4
+        ]
+      ]
+    },
+    {
+      "name": "Polyester Fabric",
+      "key_name": "polyester-fabric",
+      "category": "refining",
+      "time": 2,
+      "ingredients": [
+        [
+          "polymer-resin",
+          1
+        ],
+        [
+          "water",
+          1
+        ]
+      ],
+      "products": [
+        [
+          "fabric",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "Compacted Coal",
+      "key_name": "compacted-coal",
+      "category": "crafting2",
+      "time": 12,
+      "ingredients": [
+        [
+          "coal",
+          5
+        ],
+        [
+          "sulfur",
+          5
+        ]
+      ],
+      "products": [
+        [
+          "compacted-coal",
+          5
         ]
       ]
     }
