@@ -183,13 +183,13 @@ The objective is a single `prob +=` line in `solve.py`. Two natural modes:
 
 `optimization.ipynb` will document this switch with a commented-out alternative objective cell.
 
-### Known data gap — Phase 5
-`biochemical-sculptor` is not in `data.json`. When unlocked, it needs to be added as:
-1. An item entry in `data.json` with `sink_points` value
-2. Its recipe added to the recipes list
-3. Updated `TOTAL_DEMAND` in the optimization notebook
+### Phase 5 data — fully present
+All Phase 5 project parts are now in `data.json`:
+- Biochemical Sculptor (added): blender, 120s, 0.5 ADS + 40 Ficsite Trigon + 10 water → 2/min, 301,778 pts
+- Ballistic Warp Drive: already present, 2,895,334 pts
+- AI Expansion Server: already present, 597,652 pts
 
-All other project parts through Phase 4 are fully present.
+The solver will naturally activate these chains once SAM/ficsite resources are added to `RESOURCE_SUPPLY`.
 
 ### What a "new phase" workflow looks like
 1. Claim new resource nodes → update `RESOURCE_SUPPLY`
