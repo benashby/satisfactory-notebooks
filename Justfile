@@ -29,12 +29,16 @@ setup:
     # breaks the MCP's execute path (timeouts) and throws "File ID error" in the UI.
     # Use Claude Code + the MCP instead of in-Lab Jupyternaut.
     uv pip install --python .venv/bin/python \
-        jupyterlab ipykernel numpy pandas matplotlib scipy plotly jupyter-mcp-server
+        jupyterlab ipykernel numpy pandas matplotlib scipy plotly jupyter-mcp-server pulp graphviz pytest
     # Register the venv as the default `python3` kernel so notebooks run THIS interpreter
     # (the one with all the packages), not some other python jupyter might discover.
     .venv/bin/python -m ipykernel install --prefix .venv --name python3 \
         --display-name "Python 3 (satisfactory)"
     echo "Done. Run: just start"
+
+# Run all tests
+test:
+    env -u PYTHONPATH .venv/bin/pytest tests/ -v
 
 # Start JupyterLab server in background
 start:
@@ -90,7 +94,11 @@ status:
 # Execute notebook and save outputs in-place (auto-trusts so HTML/JS renders in JupyterLab)
 # env -u PYTHONPATH: the devshell's python language exports PYTHONPATH, which would
 # shadow the venv in the spawned kernel and hide pip-installed packages (e.g. plotly).
+# GV: adds graphviz dot binary to PATH so graph.py can render SVG inline.
 run notebook="index.ipynb":
+    #!/usr/bin/env bash
+    GV=$(nix-build '<nixpkgs>' -A graphviz --no-out-link 2>/dev/null)
+    [ -n "$GV" ] && export PATH="$GV/bin:$PATH"
     env -u PYTHONPATH {{JUPYTER}} nbconvert --to notebook --execute --inplace {{notebook}}
     {{JUPYTER}} trust {{notebook}}
 
