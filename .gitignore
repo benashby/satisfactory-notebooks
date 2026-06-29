@@ -6,3 +6,6 @@
 __pycache__/
 .ipynb_checkpoints/
 .superpowers/
+.playwright-mcp/
+.remember/
+*.png
