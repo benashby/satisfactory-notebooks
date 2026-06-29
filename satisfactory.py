@@ -44,6 +44,7 @@ class Item:
     stack_size: int
     is_fluid: bool
     is_resource: bool  # True = raw extractable, no recipe needed
+    sink_points: int = 0  # AWESOME Sink points; 0 = unsinkable
 
 
 @dataclass(frozen=True)
@@ -110,6 +111,7 @@ def _build_indexes(raw: dict):
             stack_size=entry.get("stack_size", 0),
             is_fluid=False,
             is_resource=k in resource_keys,
+            sink_points=entry.get("sink_points", 0),
         )
     for entry in raw["fluids"]:
         k = entry["key_name"]
@@ -120,6 +122,7 @@ def _build_indexes(raw: dict):
             stack_size=0,
             is_fluid=True,
             is_resource=k in resource_keys,
+            sink_points=0,
         )
 
     buildings: dict[str, Building] = {}
