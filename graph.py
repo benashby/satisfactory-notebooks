@@ -88,16 +88,16 @@ def build_graph(
             rankdir="LR",
             bgcolor="#1a1a2e",
             splines="polyline",
-            nodesep="0.5",
-            ranksep="1.4",
+            nodesep="0.6",
+            ranksep="1.8",
             fontname="Helvetica",
             pad="0.6",
         ),
-        node_attr=dict(fontname="Helvetica", fontsize="9"),
+        node_attr=dict(fontname="Helvetica", fontsize="10"),
         edge_attr=dict(
             fontname="Helvetica",
-            fontsize="8",
-            fontcolor="#aaaacc",
+            fontsize="11",
+            fontcolor="#dddddd",
         ),
     )
 
@@ -155,10 +155,11 @@ def build_graph(
             continue
         if not _is_junction(item, active):
             continue
-        flow = abs(net_fn(item))
+        # Show total production throughput, not net excess (net is 0 for fully-consumed items)
+        total_prod = sum(rate * r.products.get(item, 0) for r, rate in active if item in r.products)
         dot.node(
             f"item_{item}",
-            label=f"{ITEMS[item].name}\n{flow:.0f}/min",
+            label=f"{ITEMS[item].name}\n{total_prod:.0f}/min",
             shape="ellipse",
             style="filled",
             fillcolor="#2d2d4a",
@@ -173,10 +174,10 @@ def build_graph(
         bg, fg = BUILDING_COLORS.get(r.building, ("#444", "#fff"))
         dot.node(
             f"recipe_{r.key}",
-            label=f'''<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2" BGCOLOR="{bg}">
-  <TR><TD><B><FONT COLOR="{fg}" POINT-SIZE="11">{n}× {r.building}</FONT></B></TD></TR>
-  <TR><TD><FONT COLOR="{fg}" POINT-SIZE="9">{r.name}</FONT></TD></TR>
-  <TR><TD><FONT COLOR="{fg}" POINT-SIZE="8">@ {clk:.0f}%</FONT></TD></TR>
+            label=f'''<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="3" BGCOLOR="{bg}">
+  <TR><TD><B><FONT COLOR="{fg}" POINT-SIZE="14">{n}× {r.building}</FONT></B></TD></TR>
+  <TR><TD><FONT COLOR="{fg}" POINT-SIZE="10">{r.name}</FONT></TD></TR>
+  <TR><TD><FONT COLOR="{fg}" POINT-SIZE="9">@ {clk:.0f}%</FONT></TD></TR>
 </TABLE>>''',
             shape="none",
             margin="0",
